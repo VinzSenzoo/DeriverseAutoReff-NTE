@@ -205,7 +205,7 @@ async function main() {
     try {
       const response = await axios.post('https://app.viral-loops.com/api/v2/events', payload, accountAxiosConfig);
       if (response.data && response.data.referralCode) {
-        regSpinner.succeed(chalk.greenBright(` Berhasil mendaftarkan akun.`));
+        regSpinner.succeed(chalk.greenBright(`  Berhasil mendaftarkan akun.`));
         successCount++;
       } else {
         regSpinner.fail(chalk.red(' Gagal mendaftarkan akun: Response tidak valid'));
