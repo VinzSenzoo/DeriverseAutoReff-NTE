@@ -1,495 +1,242 @@
-import fs from 'fs';
-import "dotenv/config";
-import axios from 'axios';
-import { Wallet } from 'ethers';
+import inquirer from 'inquirer';
 import ora from 'ora';
-import { HttpsProxyAgent } from 'https-proxy-agent';
-import { SocksProxyAgent } from 'socks-proxy-agent';
-import cfonts from 'cfonts';
-import readline from 'readline';
 import chalk from 'chalk';
-
-function askQuestion(query) {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-  return new Promise(resolve => rl.question(query, ans => {
-    rl.close();
-    resolve(ans);
-  }));
-}
+import fs from 'fs';
+import axios from 'axios';
+import { Keypair } from '@solana/web3.js';
+import { faker } from '@faker-js/faker';
+import { HttpsProxyAgent } from 'https-proxy-agent';
+import cfonts from 'cfonts';
 
 function centerText(text, color = "cyanBright") {
   const terminalWidth = process.stdout.columns || 80;
-  const padding = Math.max(0, Math.floor((terminalWidth - text.length) / 2));
+  const textLength = text.length;
+  const padding = Math.max(0, Math.floor((terminalWidth - textLength) / 2));
   return " ".repeat(padding) + chalk[color](text);
 }
 
-function readProxiesFromFile(filename) {
-  try {
-    const content = fs.readFileSync(filename, 'utf8');
-    return content.split('\n').map(line => line.trim()).filter(line => line !== '');
-  } catch (err) {
-    console.error(chalk.red("Gagal membaca file proxy.txt:", err.message));
-    return [];
-  }
-}
-
 cfonts.say("NT Exhaust", {
-  font: "block",
-  align: "center",
-  colors: ["cyan", "magenta"],
-  background: "transparent",
-  letterSpacing: 1,
-  lineHeight: 1,
-  space: true,
-  maxLength: "0",
-});
-console.log(centerText("=== Telegram Channel 🚀 : NT Exhaust (@NTExhaust) ==="));
-
-let proxyUrl = null;
-let agent = null;
-let axiosInstance = axios.create();
-
-async function setupProxy() {
-  const useProxy = await askQuestion(chalk.cyan("Apakah Anda ingin menggunakan proxy? (Y/n): "));
-  if (useProxy.toLowerCase() === 'y') {
-    const proxies = readProxiesFromFile('proxy.txt');
-    if (proxies.length > 0) {
-      proxyUrl = proxies[0];
-      if (proxyUrl.startsWith('http://') || proxyUrl.startsWith('https://')) {
-        agent = new HttpsProxyAgent(proxyUrl);
-      } else if (proxyUrl.startsWith('socks5://')) {
-        agent = new SocksProxyAgent(proxyUrl);
-      } else {
-        console.log(chalk.red("Format proxy tidak dikenali. Harap gunakan http/https atau socks5."));
-        return;
-      }
-      axiosInstance = axios.create({ httpAgent: agent, httpsAgent: agent });
-      console.log(chalk.green(`Menggunakan proxy: ${proxyUrl}`));
-    } else {
-      console.log(chalk.red("File proxy.txt kosong atau tidak ditemukan. Melanjutkan tanpa proxy."));
-    }
-  } else {
-    console.log(chalk.blue("Melanjutkan tanpa proxy."));
-  }
-}
-
-function shortAddress(address) {
-  return `${address.slice(0, 8)}...${address.slice(-4)}`;
-}
-
-function formatCountdown(ms) {
-  if (ms <= 0) return "00:00:00";
-  const totalSeconds = Math.floor(ms / 1000);
-  const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
-  const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
-  const seconds = String(totalSeconds % 60).padStart(2, "0");
-  return `${hours}:${minutes}:${seconds}`;
-}
-
-async function liveCountdown(durationMs) {
-  const endTime = Date.now() + durationMs;
-  return new Promise(resolve => {
-    const timer = setInterval(() => {
-      const remaining = Math.max(endTime - Date.now(), 0);
-      process.stdout.write(chalk.yellow(`\rCycle berikutnya dalam ${formatCountdown(remaining)} ...`));
-      if (remaining <= 0) {
-        clearInterval(timer);
-        process.stdout.write("\n");
-        resolve();
-      }
-    }, 1000);
+    font: "block",
+    align: "center",
+    colors: ["cyan", "magenta"],
+    background: "transparent",
+    letterSpacing: 1,
+    lineHeight: 1,
+    space: true,
+    maxLength: "0",
   });
+
+console.log(centerText("=== Telegram Channel 🚀 : NT Exhaust ( @NTExhaust ) ==="));
+console.log(centerText("DERIVERSE WAITLIST AUTO REFF\n"));
+
+console.log(chalk.yellow('============ Auto Registration Bot ===========\n'));
+
+function generateRandomHeaders() {
+  const userAgents = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/115.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Version/14.0.3 Safari/605.1.15',
+    'Mozilla/5.0 (Linux; Android 10; SM-G970F) AppleWebKit/537.36 Chrome/115.0.0.0 Mobile Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/109.0'
+  ];
+  const randomUserAgent = userAgents[Math.floor(Math.random() * userAgents.length)];
+  return {
+    'User-Agent': randomUserAgent,
+    'Accept': 'application/json, text/plain, */*',
+    'Accept-Language': 'en-US,en;q=0.9'
+  };
 }
 
-async function requestWithRetry(fn, maxRetries = 30, delayMs = 2000, debug = false) {
-  let attempt = 0;
-  while (attempt < maxRetries) {
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function countdown(ms) {
+  const seconds = Math.floor(ms / 1000);
+  for (let i = seconds; i > 0; i--) {
+    process.stdout.write(chalk.grey(`\rMenunggu ${i} detik... `));
+    await delay(1000);
+  }
+  process.stdout.write('\r' + ' '.repeat(50) + '\r');
+}
+
+async function main() {
+  const { useProxy } = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'useProxy',
+      message: 'Apakah Anda ingin menggunakan proxy?',
+      default: false,
+    }
+  ]);
+
+  let proxyList = [];
+  let proxyMode = null;
+  if (useProxy) {
+    const proxyAnswer = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'proxyType',
+        message: 'Pilih jenis proxy:',
+        choices: ['Rotating', 'Static'],
+      }
+    ]);
+    proxyMode = proxyAnswer.proxyType;
     try {
-      return await fn();
+      const proxyData = fs.readFileSync('proxy.txt', 'utf8');
+      proxyList = proxyData.split('\n').map(line => line.trim()).filter(Boolean);
+      console.log(chalk.blueBright(`Terdapat ${proxyList.length} proxy.\n`));
     } catch (err) {
-      if (err.response && err.response.status === 429) {
-        attempt++;
-        if (debug) console.warn(chalk.yellow(`Attempt ${attempt}: Received 429, retrying in ${delayMs}ms...`));
-        await new Promise(resolve => setTimeout(resolve, delayMs));
-      } else {
-        throw err;
-      }
+      console.log(chalk.yellow('File proxy.txt tidak ditemukan, tidak menggunakan proxy.\n'));
     }
   }
-  throw new Error("Max retry attempts reached");
-}
 
-async function verifyTask(activityId, headers) {
-  const payload = {
-    operationName: "VerifyActivity",
-    variables: { data: { activityId } },
-    query:
-      "mutation VerifyActivity($data: VerifyActivityInput!) {" +
-      "  verifyActivity(data: $data) {" +
-      "    record {" +
-      "      id" +
-      "      activityId" +
-      "      status" +
-      "      __typename" +
-      "    }" +
-      "    __typename" +
-      "  }" +
-      "}"
-  };
-
-  try {
-    const response = await axiosInstance.post("https://api.deform.cc/", payload, { headers });
-    const verifyData = response.data.data.verifyActivity;
-    if (!verifyData || !verifyData.record) return false;
-    return verifyData.record.status && verifyData.record.status.toUpperCase() === "COMPLETED";
-  } catch (err) {
-    return false;
-  }
-}
-
-async function performCheckIn(activityId, headers) {
-  const payload = {
-    operationName: "VerifyActivity",
-    variables: { data: { activityId } },
-    query: `mutation VerifyActivity($data: VerifyActivityInput!) {
-      verifyActivity(data: $data) {
-        record {
-          id
-          activityId
-          status
-          properties
-          createdAt
-          rewardRecords {
-            id
-            status
-            appliedRewardType
-            appliedRewardQuantity
-            appliedRewardMetadata
-            error
-            rewardId
-            reward {
-              id
-              quantity
-              type
-              properties
-              __typename
-            }
-            __typename
-          }
-          __typename
-        }
-        missionRecord {
-          id
-          missionId
-          status
-          createdAt
-          rewardRecords {
-            id
-            status
-            appliedRewardType
-            appliedRewardQuantity
-            appliedRewardMetadata
-            error
-            rewardId
-            reward {
-              id
-              quantity
-              type
-              properties
-              __typename
-            }
-            __typename
-          }
-          __typename
-        }
-        __typename
-      }
-    }`
-  };
-
-  try {
-    const response = await axiosInstance.post("https://api.deform.cc/", payload, { headers });
-    return response.data;
-  } catch (err) {
-    console.error(chalk.red("Error saat check-in:", err.response ? err.response.data : err.message));
-    return null;
-  }
-}
-
-async function doLogin(walletKey, debug = false) {
-  try {
-    return await requestWithRetry(async () => {
-      const wallet = new Wallet(walletKey);
-      const address = wallet.address;
-      if (debug) console.log(chalk.blue("Wallet address:", address));
-
-      const privyHeaders = {
-        "Host": "auth.privy.io",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
-        "Content-Type": "application/json",
-        "privy-app-id": "clphlvsh3034xjw0fvs59mrdc",
-        "privy-ca-id": "94f3cea1-8c2b-478d-90da-edc794f7114b",
-        "privy-client": "react-auth:2.4.1",
-        "Origin": "https://puzzlemania.0g.ai",
-        "Referer": "https://puzzlemania.0g.ai/"
-      };
-
-      const initResponse = await axiosInstance.post("https://auth.privy.io/api/v1/siwe/init", { address }, { headers: privyHeaders });
-      const { nonce } = initResponse.data;
-      const issuedAt = new Date().toISOString();
-      const message = `puzzlemania.0g.ai wants you to sign in with your Ethereum account:
-${address}
-
-By signing, you are proving you own this wallet and logging in. This does not initiate a transaction or cost any fees.
-
-URI: https://puzzlemania.0g.ai
-Version: 1
-Chain ID: 8453
-Nonce: ${nonce}
-Issued At: ${issuedAt}
-Resources:
-- https://privy.io`;
-
-      const signature = await wallet.signMessage(message);
-      const authPayload = {
-        message,
-        signature,
-        chainId: "eip155:8453",
-        walletClientType: "metamask",
-        connectorType: "injected",
-        mode: "login-or-sign-up"
-      };
-      const authResponse = await axiosInstance.post("https://auth.privy.io/api/v1/siwe/authenticate", authPayload, { headers: privyHeaders });
-      const { token, user } = authResponse.data;
-      let displayName = "Unknown";
-      if (user && user.linked_accounts) {
-        const twitterAcc = user.linked_accounts.find(acc => acc.type === "twitter_oauth" && acc.name);
-        if (twitterAcc) displayName = twitterAcc.name.split("|")[0].trim();
-      }
-
-      const userLoginPayload = {
-        operationName: "UserLogin",
-        variables: { data: { externalAuthToken: token } },
-        query: `mutation UserLogin($data: UserLoginInput!) {
-          userLogin(data: $data)
-        }`
-      };
-      const deformLoginHeaders = {
-        "content-type": "application/json",
-        "origin": "https://puzzlemania.0g.ai",
-        "x-apollo-operation-name": "UserLogin"
-      };
-      const userLoginResponse = await axiosInstance.post("https://api.deform.cc/", userLoginPayload, { headers: deformLoginHeaders });
-      const userLoginToken = userLoginResponse.data.data.userLogin;
-
-      return { userLoginToken, displayName, wallet, address, loginTime: Date.now() };
-    }, 30, 2000, debug);
-  perspective} catch (err) {
-    console.error(chalk.red(`Login gagal untuk akun ${shortAddress((new Wallet(walletKey)).address)}: ${err.message}`));
-    return null;
-  }
-}
-
-async function runCycleOnce(walletKey) {
-  const loginSpinner = ora(chalk.cyan(" Memproses login...")).start();
-  const loginData = await doLogin(walletKey, false);
-  if (!loginData) {
-    loginSpinner.fail(chalk.red("Login gagal setelah max attempt. Melewati akun."));
-    return;
-  }
-  loginSpinner.succeed(chalk.green(" Login Sukses"));
-
-  const { userLoginToken, displayName, address, loginTime } = loginData;
-
-  const userMePayload = {
-    operationName: "UserMe",
-    variables: { campaignId: "f7e24f14-b911-4f11-b903-edac89a095ec" },
-    query: `
-      query UserMe($campaignId: String!) {
-        userMe {
-          campaignSpot(campaignId: $campaignId) {
-            points
-            records {
-              id
-              status
-              createdAt
-            }
-          }
-        }
-      }`
-  };
-  const userMeHeaders = {
-    "authorization": `Bearer ${userLoginToken}`,
-    "content-type": "application/json",
-    "x-apollo-operation-name": "UserMe"
-  };
-  let userMePoints = 0;
-  try {
-    const response = await axiosInstance.post("https://api.deform.cc/", userMePayload, { headers: userMeHeaders });
-    userMePoints = response.data.data.userMe.campaignSpot.points || 0;
-  } catch (err) {
-    console.error(chalk.red("Error saat mengambil XP UserMe:", err.response ? err.response.data : err.message));
-  }
-
-  const campaignPayload = {
-    operationName: "Campaign",
-    variables: { campaignId: "f7e24f14-b911-4f11-b903-edac89a095ec" },
-    query: `
-      fragment ActivityFields on CampaignActivity {
-        id
-        title
-        createdAt
-        records {
-          id
-          status
-          createdAt
-          __typename
-        }
-        __typename
-      }
-      query Campaign($campaignId: String!) {
-        campaign(id: $campaignId) {
-          activities {
-            ...ActivityFields
-            __typename
-          }
-          __typename
-        }
-      }`
-  };
-  const campaignHeaders = {
-    "authorization": `Bearer ${userLoginToken}`,
-    "content-type": "application/json",
-    "x-apollo-operation-name": "Campaign"
-  };
-  let campaignData;
-  try {
-    const campaignResponse = await axiosInstance.post("https://api.deform.cc/", campaignPayload, { headers: campaignHeaders });
-    campaignData = campaignResponse.data.data.campaign;
-  } catch (err) {
-    console.error(chalk.red("Error Campaign:", err.response ? err.response.data : err.message));
-    throw err;
-  }
-  if (!campaignData) throw new Error("Data campaign tidak ditemukan");
-
-  let dailyCheckin = campaignData.activities.find(act =>
-    act.title && act.title.toLowerCase().includes("daily check-in")
-  );
-  let claimedTasks = [];
-  let unclaimedTasks = [];
-  campaignData.activities.forEach(act => {
-    if (dailyCheckin && act.id === dailyCheckin.id) return;
-    if (act.records && act.records.length > 0) {
-      claimedTasks.push(act);
-    } else {
-      unclaimedTasks.push(act);
-    }
-  });
-
-  let checkinStatus = "Belum Check-in";
-  if (dailyCheckin) {
-    if (!dailyCheckin.records || dailyCheckin.records.length === 0) {
-      const spinnerCheckin = ora(chalk.cyan(`Melakukan check-in untuk: ${dailyCheckin.title}`)).start();
-      const checkInResponse = await performCheckIn(dailyCheckin.id, campaignHeaders);
-      spinnerCheckin.stop();
-      if (
-        checkInResponse &&
-        checkInResponse.data &&
-        checkInResponse.data.verifyActivity &&
-        checkInResponse.data.verifyActivity.record &&
-        checkInResponse.data.verifyActivity.record.status &&
-        checkInResponse.data.verifyActivity.record.status.toUpperCase() === "COMPLETED"
-      ) {
-        checkinStatus = "Check-in Berhasil";
-        dailyCheckin.records = [checkInResponse.data.verifyActivity.record];
-      } else {
-        console.log(chalk.red("Check-in Gagal."));
-      }
-    } else {
-      checkinStatus = "Selesai";
-    }
-  }
-  
-  console.clear();
-  console.log(chalk.magenta('\n==========================================================================='));
-  console.log(chalk.blueBright.bold('                         USER INFORMATION'));
-  console.log(chalk.magenta('============================================================================'));
-  console.log(chalk.cyanBright(`Name          : ${displayName}`));
-  console.log(chalk.cyanBright(`Address       : ${shortAddress(address)}`));
-  console.log(chalk.cyanBright(`XP            : ${userMePoints}`));
-  console.log(chalk.cyanBright(`Daily Checkin : ${dailyCheckin ? checkinStatus : "Belum Selesai"}`));
-  console.log(chalk.cyanBright(`Proxy         : ${proxyUrl || "Tidak ada"}`));
-  console.log(chalk.magenta('============================================================================'));
-
-  console.log(chalk.magenta('\n----------------------------- Claimed Tasks ----------------------------\n'));
-  if (claimedTasks.length === 0) {
-    console.log(chalk.red('(Tidak ada task yang telah claimed)\n'));
-  } else {
-    claimedTasks.forEach(task => {
-      console.log(chalk.green(`[VERIFIED] Task: ${task.title} => Sudah Claimed`));
-    });
-    console.log('');
-  }
-  console.log(chalk.magenta('------------------------------------------------------------------------\n'));
-
-  console.log(chalk.magenta('---------------------------- Unclaimed Tasks ---------------------------\n'));
-  if (unclaimedTasks.length === 0) {
-    console.log(chalk.red('(Tidak ada unclaimed task)\n'));
-  } else {
-    for (const task of unclaimedTasks) {
-      const spinnerTask = ora(chalk.cyan(`Verifying: ${task.title}`)).start();
-      const verified = await verifyTask(task.id, campaignHeaders);
-      spinnerTask.stop();
-      if (verified) {
-        console.log(chalk.green(`[VERIFIED] Task: ${task.title} => Claimed`));
-      } else {
-        console.log(chalk.red(`[UNVERIFIED] Task: ${task.title}`));
-      }
-    }
-  }
-  console.log(chalk.magenta('------------------------------------------------------------------------\n'));
-}
-
-async function mainLoopRoundRobin() {
-  await setupProxy();
-
-  const accounts = readPrivateKeysFromFile('.env');
-  if (!accounts.length) {
-    console.error(chalk.red("Tidak ada private key ditemukan di file .env"));
-    process.exit(1);
-  }
-
+  let count;
   while (true) {
-    const cycleStart = Date.now();
-    for (const key of accounts) {
-      console.log(chalk.cyan(`\nMemproses akun: ${shortAddress((new Wallet(key)).address)}\n`));
-      try {
-        await runCycleOnce(key);
-      } catch (err) {
-        console.error(chalk.red(`Error untuk akun ${shortAddress((new Wallet(key)).address)}: ${err.message}`));
+    const answer = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'count',
+        message: 'Masukkan jumlah akun: ',
+        validate: (value) => {
+          const parsed = parseInt(value, 10);
+          if (isNaN(parsed) || parsed <= 0) {
+            return 'Harap masukkan angka yang valid lebih dari 0!';
+          }
+          return true;
+        }
       }
-      await new Promise(resolve => setTimeout(resolve, 3000));
+    ]);
+    count = parseInt(answer.count, 10);
+    if (count > 0) break;
+  }
+
+  const { ref } = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'ref',
+      message: 'Masukkan kode reff: ',
     }
-    const cycleDuration = 24 * 60 * 60 * 1000;
-    const elapsed = Date.now() - cycleStart;
-    const remaining = cycleDuration - elapsed;
-    if (remaining > 0) {
-      await liveCountdown(remaining);
+  ]);
+
+  console.log(chalk.yellow('\n==================================='));
+  console.log(chalk.yellowBright(`Creating ${count} Akun ..`));
+  console.log(chalk.yellowBright('Note: Jangan Bar Barbar Bang 🗿'));
+  console.log(chalk.yellowBright('Saran: Kalau Mau BarBar, gunakan Proxy..'));
+  console.log(chalk.yellow('=====================================\n'));
+
+  const fileName = 'accounts.json';
+  let accounts = [];
+  if (fs.existsSync(fileName)) {
+    try {
+      accounts = JSON.parse(fs.readFileSync(fileName, 'utf8'));
+    } catch (err) {
+      accounts = [];
     }
   }
-}
 
-function readPrivateKeysFromFile(filename) {
-  try {
-    const content = fs.readFileSync(filename, 'utf8');
-    return content.split('\n').map(line => line.trim()).filter(line => line !== '');
-  } catch (err) {
-    console.error(chalk.red("Gagal membaca file .env:", err.message));
-    process.exit(1);
+  let successCount = 0;
+  let failCount = 0;
+
+  for (let i = 0; i < count; i++) {
+    console.log(chalk.cyanBright(`\n================================ ACCOUNT ${i + 1}/${count} ================================`));
+
+    let accountAxiosConfig = {
+      timeout: 50000,
+      headers: generateRandomHeaders(),
+      proxy: false
+    };
+
+    if (useProxy && proxyList.length > 0) {
+      let selectedProxy;
+      if (proxyMode === 'Rotating') {
+        selectedProxy = proxyList[0];
+      } else {
+        selectedProxy = proxyList.shift();
+        if (!selectedProxy) {
+          console.error(chalk.red("Tidak ada proxy yang tersisa untuk mode static."));
+          process.exit(1);
+        }
+      }
+      console.log("Menggunakan proxy: ", selectedProxy);
+      const agent = new HttpsProxyAgent(selectedProxy);
+      accountAxiosConfig.httpAgent = agent;
+      accountAxiosConfig.httpsAgent = agent;
+    }
+
+    let accountIP = '';
+    try {
+      const ipResponse = await axios.get('https://api.ipify.org?format=json', accountAxiosConfig);
+      accountIP = ipResponse.data.ip;
+    } catch (error) {
+      accountIP = "Gagal mendapatkan IP";
+      console.error("Error saat mendapatkan IP:", error.message);
+    }
+    console.log(chalk.white(`IP Yang Digunakan: ${accountIP}\n`));
+    const wallet = Keypair.generate();
+    const walletAddress = wallet.publicKey.toBase58();
+    console.log(chalk.greenBright(`✔️  Wallet berhasil dibuat: ${walletAddress}`));
+    const twitterUsername = faker.internet.userName();
+    const randomNum = Math.floor(Math.random() * 1000);
+    const email = `${twitterUsername}${randomNum}@gmail.com`;
+    const payload = {
+      publicToken: "K9U9mTEr2ol0h8lklaPvg3JC4DA",
+      params: {
+        event: "registration",
+        user: {
+          firstname: "",
+          lastname: twitterUsername,
+          email: email,
+          acquiredFrom: "form_widgetV2",
+          initialAcquiredFrom: `https://deriverse.io/?referralCode=${ref}&refSource=copy`,
+          extraData: {
+            cB9slgXX: walletAddress
+          },
+          consents: []
+        },
+        referrer: {
+          referralCode: ref
+        },
+        refSource: "copy",
+        acquiredFrom: "form_widgetV2"
+      }
+    };
+
+    const regSpinner = ora('Mengirim data ke API...').start();
+    try {
+      const response = await axios.post('https://app.viral-loops.com/api/v2/events', payload, accountAxiosConfig);
+      if (response.data && response.data.referralCode) {
+        regSpinner.succeed(chalk.greenBright(` Berhasil mendaftarkan akun.`));
+        successCount++;
+      } else {
+        regSpinner.fail(chalk.red(' Gagal mendaftarkan akun: Response tidak valid'));
+        failCount++;
+      }
+      accounts.push({
+        walletAddress: walletAddress,
+        secretKey: Array.from(wallet.secretKey),
+        twitterUsername: twitterUsername,
+        email: email
+      });
+      try {
+        fs.writeFileSync(fileName, JSON.stringify(accounts, null, 2));
+        console.log(chalk.greenBright('✔️  Data akun berhasil disimpan ke accounts.json'));
+      } catch (err) {
+        console.error(chalk.red(`✖   Gagal menyimpan data ke ${fileName}: ${err.message}`));
+      }
+    } catch (error) {
+      regSpinner.fail(chalk.red(`   Gagal untuk ${walletAddress} : ${error.message}`));
+      failCount++;
+    }
+
+    console.log(chalk.yellow(`\nProgress: ${i + 1}/${count} akun telah diregistrasi. (Berhasil: ${successCount}, Gagal: ${failCount})`));
+    console.log(chalk.cyanBright('====================================================================\n'));
+
+    if (i < count - 1) {
+      const randomDelay = Math.floor(Math.random() * (60000 - 30000 + 1)) + 30000;
+      await countdown(randomDelay);
+    }
   }
+  console.log(chalk.blueBright('\nRegistrasi selesai.'));
 }
 
-mainLoopRoundRobin().catch(err => console.error(chalk.red("Terjadi error fatal:", err.message)));
+main();
